@@ -22,11 +22,25 @@ A C++ implementation of the Chord Distributed Hash Table (DHT) protocol, as desc
 ### Prerequisites
 
 - A C++ compiler (e.g., `g++` or `clang++`) supporting C++17.
+- **Optional**: [CMake](https://cmake.org/) for standardized builds.
+- **Optional**: [VS Code](https://code.visualstudio.com/) with the "C/C++" extension for one-click debugging.
 
 ### Compilation
 
-Compile the project using the following command:
+#### Method 1: VS Code (Recommended)
+1. Open this folder in VS Code.
+2. Press `F5` or go to the "Run and Debug" tab and click "Debug Chord DHT".
+3. The project will automatically compile and run.
 
+#### Method 2: CMake
+```bash
+mkdir build && cd build
+cmake ..
+make
+./chord_dht
+```
+
+#### Method 3: Manual g++
 ```bash
 g++ -std=c++17 main.cpp node.cpp -o chord_dht
 ```
@@ -42,17 +56,21 @@ Run the compiled executable to see a demonstration of nodes joining and performi
 ## How It Works
 
 ### Node Join
+
 When a node joins, it:
+
 1.  Initializes its finger table by querying a bootstrap node.
 2.  Updates the predecessor and successor pointers in the ring.
 3.  Migrates keys from its successor that now fall within its range.
 
 ### Key Lookup
+
 The `find(key)` operation:
+
 1.  Checks if the key is managed by the local node or its immediate successor.
 2.  If not, it uses the finger table to jump to the node that most closely precedes the key.
 3.  Repeats the process until the successor of the current node owns the key.
 
 ## References
 
-- [Chord: A Scalable Peer-to-peer Lookup Service for Internet Applications](http://nms.lcs.mit.edu/papers/chord.pdf)
+- [Chord: A Scalable Peer-to-peer Lookup Service for Internet Applications](https://conferences.sigcomm.org/sigcomm/2001/p12-stoica.pdf)
