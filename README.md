@@ -13,9 +13,9 @@ A C++ implementation of the Chord Distributed Hash Table (DHT) protocol, as desc
 
 ## Project Structure
 
-- `node.h` / `node.cpp`: Core logic for the Chord node, including finger table management and routing.
-- `main.cpp`: Test driver simulating a Chord network with sample join and lookup operations.
-- `chord_paper.pdf`: Reference material for the Chord protocol.
+- `src/`: Contains all source code including `node.h`, `node.cpp`, `main.cpp`, and `CMakeLists.txt`.
+- `docs/`: Repository for project documentation and reference materials (PDFs).
+- `README.md`: Project overview and setup instructions.
 
 ## Getting Started
 
