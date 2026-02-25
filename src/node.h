@@ -34,6 +34,9 @@ public:
 	 */
 	void join(Node* node);
 
+	// Node leave
+	void leave();
+
 	// DHT lookup
 	uint8_t find(uint8_t key);
 
@@ -49,8 +52,9 @@ public:
     void setPredecessor(Node* node);
     void setSuccessor(Node* node);
     
-    // For debugging/printing
+	// For debugging/printing
     void printKeys();
+    void printFingerTable();
     
     // Helper for finding successor logic
     Node* find_successor(uint8_t id);

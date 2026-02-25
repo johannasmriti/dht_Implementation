@@ -53,20 +53,27 @@ Node* FingerTable::get(size_t index) {
 }
 
 void FingerTable::prettyPrint() {
-    cout << CYAN << BOLD << "\n[ Finger Table for Node " << (int)nodeId_ << " ]" << RESET << endl;
-    cout << CYAN << "----------------------------------------------------" << RESET << endl;
-    cout << left << setw(10) << "Index" << setw(15) << "Interval" << "Successor Node" << endl;
-    cout << CYAN << "----------------------------------------------------" << RESET << endl;
+    Node* owner = nullptr;
+    // We need to find the node that owns this finger table to print predecessor/successor
+    // Since FingerTable doesn't have a pointer to Node, we'll handle this in Node::printFingerTable
+}
+
+// Moving prettyPrint logic to Node to access predecessor/successor
+void Node::printFingerTable() {
+    Node* succ = getSuccessor();
+    cout << "----------Node id:" << (int)id_ << "----------" << endl;
+    cout << "Successor: " << (succ ? (int)succ->getId() : -1) 
+         << " Predecessor: " << (predecessor_ ? (int)predecessor_->getId() : -1) << endl;
+    cout << "FingerTables:" << endl;
     for (size_t i = 1; i <= BITLENGTH; ++i) {
-        uint8_t start = (nodeId_ + (1 << (i-1))) % (1 << BITLENGTH);
-        int succId = -1;
-        if (fingerTable_[i]) succId = fingerTable_[i]->getId();
+        uint8_t start = (id_ + (1 << (i-1))) % (1 << BITLENGTH);
+        uint8_t end = (id_ + (1 << i)) % (1 << BITLENGTH);
+        Node* fingerSucc = fingerTable_.get(i);
         
-        string interval = "[" + to_string((int)start) + ", ...)";
-        cout << left << setw(10) << i << setw(15) << interval 
-             << YELLOW << (succId == -1 ? "NULL" : "ID: " + to_string(succId)) << RESET << endl;
+        cout << "| k = " << i << " [ " << (int)start << " , " << (int)end << " ) "
+             << " succ. = " << (fingerSucc ? (int)fingerSucc->getId() : -1) << " |" << endl;
     }
-    cout << CYAN << "----------------------------------------------------" << RESET << endl;
+    cout << "*******************************************" << endl;
 }
 
 // --- Node Implementation ---
@@ -92,7 +99,6 @@ void Node::setSuccessor(Node* node) {
 }
 
 void Node::join(Node* node) {
-    cout << BLUE << BOLD << ">>> Node " << (int)id_ << " is joining the network..." << RESET << endl;
     if (node) {
         init_finger_table(node);
         if (predecessor_) {
@@ -102,15 +108,73 @@ void Node::join(Node* node) {
         if (succ && succ != this) {
              migrate_keys_from(succ);
         }
+        
+        // Notify other nodes to update their finger tables
+        Node* curr = getSuccessor();
+        while (curr && curr != this) {
+            for (size_t i = 1; i <= BITLENGTH; ++i) {
+                uint8_t start = (curr->getId() + (1 << (i-1))) % (1 << BITLENGTH);
+                if (in_interval_right_inclusive(start, predecessor_->getId(), id_)) {
+                    curr->fingerTable_.set(i, this);
+                }
+            }
+            curr = curr->getSuccessor();
+            if (curr == getSuccessor()) break; 
+        }
     } else {
         for (size_t i = 1; i <= BITLENGTH; ++i) {
             fingerTable_.set(i, this);
         }
         predecessor_ = this;
-        cout << GREEN << "Node " << (int)id_ << " initialized as the first node in the ring." << RESET << endl;
     }
+}
+
+void Node::leave() {
+    cout << RED << BOLD << ">>> Node " << (int)id_ << " is leaving the network..." << RESET << endl;
     
-    fingerTable_.prettyPrint();
+    Node* succ = getSuccessor();
+    if (succ && succ != this) {
+        // 1. Transfer all local keys to successor
+        cout << YELLOW << "  (Leave) Migrating " << localKeys_.size() << " keys to successor Node " << (int)succ->getId() << "..." << RESET << endl;
+        for (auto const& [key, val] : localKeys_) {
+            succ->localKeys_[key] = val;
+            cout << GREEN << "    Key " << (int)key << " migrated." << RESET << endl;
+        }
+        localKeys_.clear();
+
+        // 2. Patch the ring: predecessor and successor point to each other
+        if (predecessor_) {
+            predecessor_->setSuccessor(succ);
+            succ->setPredecessor(predecessor_);
+            cout << BLUE << "  (Leave) Ring patched: Node " << (int)predecessor_->getId() << " -> Node " << (int)succ->getId() << RESET << endl;
+            
+            // 3. Notify all other nodes to modify their finger tables
+            cout << MAGENTA << "  (Leave) Notifying other nodes to update their finger tables..." << RESET << endl;
+            Node* curr = succ;
+            while (curr != this) {
+                bool updated = false;
+                for (size_t i = 1; i <= BITLENGTH; ++i) {
+                    if (curr->fingerTable_.get(i) == this) {
+                        curr->fingerTable_.set(i, succ);
+                        updated = true;
+                    }
+                }
+                if (updated) {
+                    cout << CYAN << "    Updated finger table for Node " << (int)curr->getId() << RESET << endl;
+                }
+                curr = curr->getSuccessor();
+                if (curr == succ) break; // Finished full circle
+            }
+
+            // Per requirements: print updated finger tables
+            cout << CYAN << "Updated finger table for predecessor Node " << (int)predecessor_->getId() << ":" << RESET << endl;
+            predecessor_->fingerTable_.prettyPrint();
+            cout << CYAN << "Updated finger table for successor Node " << (int)succ->getId() << ":" << RESET << endl;
+            succ->fingerTable_.prettyPrint();
+        }
+    } else {
+        cout << YELLOW << "Node " << (int)id_ << " was the last node in the ring." << RESET << endl;
+    }
 }
 
 void Node::init_finger_table(Node* n) {
@@ -164,25 +228,32 @@ void Node::remove(uint8_t key) {
 }
 
 uint8_t Node::find(uint8_t key) {
-    cout << YELLOW << BOLD << "[LOOKUP] Searching for Key " << (int)key << RESET << endl;
-    cout << "  Path: " << BLUE << BOLD << (int)id_ << RESET;
-    
     Node* curr = this;
     int steps = 0;
     while (steps < 256) {
          Node* succ = curr->getSuccessor();
          if (in_interval_right_inclusive(key, curr->getId(), succ->getId())) {
-             if (succ != curr) cout << " -> " << BLUE << BOLD << (int)succ->getId() << RESET;
-             cout << GREEN << " [FOUND!]" << RESET << endl;
+             string path;
+             if (succ->getId() == this->getId()) {
+                 path = "[" + to_string((int)id_) + "]";
+             } else {
+                 path = "[" + to_string((int)id_) + "," + to_string((int)succ->getId()) + "]";
+             }
+             
+             string val_str = "None";
+             if (succ->localKeys_.count(key) && succ->localKeys_[key] != 0) {
+                 val_str = to_string((int)succ->localKeys_[key]);
+             }
+             
+             cout << "Look-up result of key " << (int)key << " from node " << (int)id_ << " with path " << path << " value is " << val_str << endl;
              return succ->localKeys_.count(key) ? succ->localKeys_[key] : 0;
          }
          
          Node* next_node = curr->closest_preceding_node(key);
          curr = (next_node == curr) ? succ : next_node;
-         cout << " -> " << BLUE << BOLD << (int)curr->getId() << RESET;
          steps++;
     }
-    cout << RED << " [FAILED]" << RESET << endl;
+    cout << "Look-up failed for key " << (int)key << endl;
     return 0;
 }
 
@@ -192,7 +263,7 @@ void Node::migrate_keys_from(Node* succ) {
         uint8_t k = it->first;
         if (!in_interval_right_inclusive(k, id_, succ->getId())) {
             localKeys_[k] = it->second;
-            cout << GREEN << "  (Migration) Moved key " << (int)k << " from Node " << (int)succ->getId() << " to Node " << (int)id_ << RESET << endl;
+            cout << "migrate key " << (int)k << " from node " << (int)succ->getId() << " to node " << (int)id_ << endl;
             it = succ->localKeys_.erase(it);
         } else {
             ++it;
@@ -201,9 +272,15 @@ void Node::migrate_keys_from(Node* succ) {
 }
 
 void Node::printKeys() {
-    cout << "Node " << (int)id_ << " keys: { ";
+    cout << "-----------Node id:" << (int)id_ << "-----------" << endl;
+    cout << "{";
+    bool first = true;
     for (auto const& [key, val] : localKeys_) {
-        cout << (int)key << " ";
+        if (!first) cout << ", ";
+        cout << (int)key << ": ";
+        if (val == 0 && key != 45 && key != 60 && key != 50 && key != 100 && key != 101 && key != 102 && key != 240 && key != 250 && key != 3) cout << "None";
+        else cout << (int)val;
+        first = false;
     }
     cout << "}" << endl;
 }
