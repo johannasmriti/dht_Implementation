@@ -1,5 +1,3 @@
-
-
 #include <iostream>
 #include <vector>
 #include <cmath>
@@ -18,26 +16,20 @@ void printIdentifierCircle(const vector<Node*>& nodes) {
     float radiusX = width * 0.4;
     float radiusY = height * 0.4;
 
-    // Draw circle border
     for (float a = 0; a < 2 * 3.14159; a += 0.05) {
         int x = (int)(centerX + radiusX * cos(a));
         int y = (int)(centerY + radiusY * sin(a));
         if (x >= 0 && x < width && y >= 0 && y < height) grid[y][x] = '.';
     }
 
-    // Place nodes
     for (size_t i = 0; i < nodes.size(); ++i) {
         uint8_t id = nodes[i]->getId();
-        // Calculate angle based on 8-bit ID (0-255)
-        // 0 is at the top ( -PI/2 )
         float angle = (id / 256.0) * 2 * 3.14159 - (3.14159 / 2.0);
         int x = (int)(centerX + radiusX * cos(angle));
         int y = (int)(centerY + radiusY * sin(angle));
         
         string label = "n" + to_string(i) + "(" + to_string((int)id) + ")";
         
-        // Offset label slightly so it doesn't overwrite the dot directly if possible, 
-        // or just center it.
         int startX = x - label.length() / 2;
         for (size_t j = 0; j < label.length(); ++j) {
             int lx = startX + j;
@@ -73,9 +65,6 @@ int main() {
     n3.join(&n2);
     n4.join(&n3);
     n5.join(&n4);
-    
-    // ... rest of main ...
-
     
     cout << "\n2. Print finger table of all nodes" << std::endl;
     n0.printFingerTable();

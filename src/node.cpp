@@ -5,7 +5,6 @@
 
 using namespace std;
 
-// ANSI Color Codes for "Visually Pleasing" Terminal Output
 const string RESET = "\033[0m";
 const string BOLD = "\033[1m";
 const string CYAN = "\033[36m";
@@ -14,8 +13,6 @@ const string YELLOW = "\033[33m";
 const string BLUE = "\033[34m";
 const string MAGENTA = "\033[35m";
 const string RED = "\033[31m";
-
-// --- Helper Functions ---
 
 bool in_interval_right_inclusive(int val, int start, int end) {
     if (start == end) return true;
@@ -35,7 +32,6 @@ bool in_interval_exclusive(int val, int start, int end) {
     }
 }
 
-// --- FingerTable Implementation ---
 
 FingerTable::FingerTable(uint8_t nodeId) : nodeId_(nodeId) {
     fingerTable_.resize(BITLENGTH + 1, nullptr);
@@ -54,11 +50,8 @@ Node* FingerTable::get(size_t index) {
 
 void FingerTable::prettyPrint() {
     Node* owner = nullptr;
-    // We need to find the node that owns this finger table to print predecessor/successor
-    // Since FingerTable doesn't have a pointer to Node, we'll handle this in Node::printFingerTable
 }
 
-// Moving prettyPrint logic to Node to access predecessor/successor
 void Node::printFingerTable() {
     Node* succ = getSuccessor();
     cout << "----------Node id:" << (int)id_ << "----------" << endl;
@@ -76,7 +69,6 @@ void Node::printFingerTable() {
     cout << "*******************************************" << endl;
 }
 
-// --- Node Implementation ---
 
 Node::Node(uint8_t id) : id_(id), fingerTable_(id) {
     predecessor_ = nullptr;
@@ -109,7 +101,6 @@ void Node::join(Node* node) {
              migrate_keys_from(succ);
         }
         
-        // Notify other nodes to update their finger tables
         Node* curr = getSuccessor();
         while (curr && curr != this) {
             for (size_t i = 1; i <= BITLENGTH; ++i) {
@@ -134,7 +125,6 @@ void Node::leave() {
     
     Node* succ = getSuccessor();
     if (succ && succ != this) {
-        // 1. Transfer all local keys to successor
         cout << YELLOW << "  (Leave) Migrating " << localKeys_.size() << " keys to successor Node " << (int)succ->getId() << "..." << RESET << endl;
         for (auto const& [key, val] : localKeys_) {
             succ->localKeys_[key] = val;
@@ -142,13 +132,11 @@ void Node::leave() {
         }
         localKeys_.clear();
 
-        // 2. Patch the ring: predecessor and successor point to each other
         if (predecessor_) {
             predecessor_->setSuccessor(succ);
             succ->setPredecessor(predecessor_);
             cout << BLUE << "  (Leave) Ring patched: Node " << (int)predecessor_->getId() << " -> Node " << (int)succ->getId() << RESET << endl;
             
-            // 3. Notify all other nodes to modify their finger tables
             cout << MAGENTA << "  (Leave) Notifying other nodes to update their finger tables..." << RESET << endl;
             Node* curr = succ;
             while (curr != this) {
@@ -163,10 +151,9 @@ void Node::leave() {
                     cout << CYAN << "    Updated finger table for Node " << (int)curr->getId() << RESET << endl;
                 }
                 curr = curr->getSuccessor();
-                if (curr == succ) break; // Finished full circle
+                if (curr == succ) break; 
             }
 
-            // Per requirements: print updated finger tables
             cout << CYAN << "Updated finger table for predecessor Node " << (int)predecessor_->getId() << ":" << RESET << endl;
             predecessor_->fingerTable_.prettyPrint();
             cout << CYAN << "Updated finger table for successor Node " << (int)succ->getId() << ":" << RESET << endl;
