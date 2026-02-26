@@ -2,6 +2,7 @@
 #include <vector>
 #include <cmath>
 #include <algorithm>
+#include <random>
 #include "node.h"
 
 using namespace std;
@@ -29,7 +30,6 @@ void printIdentifierCircle(const vector<Node*>& nodes) {
         int y = (int)(centerY + radiusY * sin(angle));
         
         string label = "n" + to_string(i) + "(" + to_string((int)id) + ")";
-        
         int startX = x - label.length() / 2;
         for (size_t j = 0; j < label.length(); ++j) {
             int lx = startX + j;
@@ -44,6 +44,61 @@ void printIdentifierCircle(const vector<Node*>& nodes) {
         cout << row << endl;
     }
     cout << endl;
+}
+
+void simulateSpaceShuffle() {
+    cout << "\n===========================================" << endl;
+    cout << "6. Optional: Simulate Space Shuffle (S2)" << endl;
+    cout << "===========================================" << endl;
+
+    const int num_nodes = 10;
+    const int num_spaces = 3;
+    vector<Node*> s2_nodes;
+    
+    for (int i = 0; i < num_nodes; ++i) {
+        s2_nodes.push_back(new Node(i * 25));
+    }
+
+    mt19937 rng(42); 
+    uniform_int_distribution<int> dist(0, 255);
+
+    cout << "Node Coordinates in " << num_spaces << " spaces:" << endl;
+    for (auto node : s2_nodes) {
+        vector<uint8_t> coords;
+        for (int s = 0; s < num_spaces; ++s) {
+            coords.push_back((uint8_t)dist(rng));
+        }
+        node->setCoordinates(coords);
+        cout << "  Node " << (int)node->getId() << ": [";
+        for (int s = 0; s < num_spaces; ++s) cout << (int)coords[s] << (s == num_spaces - 1 ? "" : ", ");
+        cout << "]" << endl;
+    }
+
+    for (int s = 0; s < num_spaces; ++s) {
+        vector<pair<uint8_t, Node*>> ring;
+        for (auto node : s2_nodes) {
+            ring.push_back({node->getCoordinates()[s], node});
+        }
+        sort(ring.begin(), ring.end());
+
+        for (int i = 0; i < num_nodes; ++i) {
+            Node* curr = ring[i].second;
+            Node* prev = ring[(i - 1 + num_nodes) % num_nodes].second;
+            Node* next = ring[(i + 1) % num_nodes].second;
+            curr->addS2Neighbor(prev);
+            curr->addS2Neighbor(next);
+        }
+    }
+
+    cout << "\nPerforming Space Shuffle Lookups (Greediest Routing):" << endl;
+    
+    vector<uint8_t> target = s2_nodes[9]->getCoordinates();
+    s2_nodes[0]->s2Lookup(target);
+
+    vector<uint8_t> randomTarget = {100, 200, 50};
+    s2_nodes[2]->s2Lookup(randomTarget);
+
+    for (auto node : s2_nodes) delete node;
 }
 
 int main() {
@@ -125,6 +180,8 @@ int main() {
     n3.printKeys();
     n4.printKeys();
     n5.printKeys();
+
+    simulateSpaceShuffle();
     
     return 0;
 }

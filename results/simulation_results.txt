@@ -219,3 +219,24 @@ FingerTables:
 {123: None}
 -----------Node id:230-----------
 {200: None}
+
+===========================================
+6. Optional: Simulate Space Shuffle (S2)
+===========================================
+Node Coordinates in 3 spaces:
+  Node 0: [102, 179, 92]
+  Node 25: [14, 106, 71]
+  Node 50: [188, 20, 102]
+  Node 75: [121, 210, 214]
+  Node 100: [74, 202, 87]
+  Node 125: [116, 99, 103]
+  Node 150: [151, 130, 149]
+  Node 175: [52, 1, 87]
+  Node 200: [235, 157, 37]
+  Node 225: [129, 191, 187]
+
+Performing Space Shuffle Lookups (Greediest Routing):
+[33m[S2 LOOKUP] Target: [129, 191, 187][0m
+  Path: [1m0[0m -> [1m225[0m[32m [REACHED!][0m
+[33m[S2 LOOKUP] Target: [100, 200, 50][0m
+  Path: [1m50[0m -> [1m0[0m[31m [STUCK - LOCAL MINIMUM][0m

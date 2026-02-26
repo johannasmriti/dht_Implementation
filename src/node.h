@@ -5,8 +5,10 @@
 #include <iostream>
 #include <map>
 #include <vector>
+#include <set>
 
 #define BITLENGTH 8
+#define NUM_SPACES 3
 
 //forward declaration
 class Node;
@@ -65,6 +67,14 @@ public:
 
     // Update finger table of this node
     void init_finger_table(Node* n);
+
+    // --- Space Shuffle (S2) Methods ---
+    void setCoordinates(const std::vector<uint8_t>& coords);
+    const std::vector<uint8_t>& getCoordinates() const { return coordinates_; }
+    void addS2Neighbor(Node* neighbor);
+    uint8_t s2Lookup(const std::vector<uint8_t>& targetCoords);
+    static uint8_t calculateCD(uint8_t x, uint8_t y);
+    uint8_t calculateMCD(const std::vector<uint8_t>& targetCoords);
     
 private:
 	uint8_t id_;
@@ -72,10 +82,14 @@ private:
 	std::map<uint8_t, uint8_t> localKeys_;
 	Node* predecessor_;
     
+    // Space Shuffle data
+    std::vector<uint8_t> coordinates_;
+    std::set<Node*> s2Neighbors_;
+
     // Friends to access private members
     friend class FingerTable; 
-    // Actually FingerTable doesn't need to access Node's private.
-    // Node needs to access Node's private (always allowed).
+
+
 };
 
 #endif

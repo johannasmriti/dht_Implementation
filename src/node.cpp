@@ -258,6 +258,73 @@ void Node::migrate_keys_from(Node* succ) {
     }
 }
 
+
+void Node::setCoordinates(const vector<uint8_t>& coords) {
+    coordinates_ = coords;
+}
+
+void Node::addS2Neighbor(Node* neighbor) {
+    if (neighbor && neighbor != this) {
+        s2Neighbors_.insert(neighbor);
+    }
+}
+
+uint8_t Node::calculateCD(uint8_t x, uint8_t y) {
+    uint8_t diff = (x > y) ? (x - y) : (y - x);
+    uint8_t circular = 0 - diff; // This is (256 - diff) using uint8_t overflow
+    return (diff < circular) ? diff : circular;
+}
+
+uint8_t Node::calculateMCD(const vector<uint8_t>& targetCoords) {
+    uint8_t minCD = 255;
+    for (size_t i = 0; i < coordinates_.size() && i < targetCoords.size(); ++i) {
+        uint8_t cd = calculateCD(coordinates_[i], targetCoords[i]);
+        if (cd < minCD) minCD = cd;
+    }
+    return minCD;
+}
+
+uint8_t Node::s2Lookup(const vector<uint8_t>& targetCoords) {
+    cout << YELLOW << "[S2 LOOKUP] Target: [";
+    for(size_t i=0; i<targetCoords.size(); ++i) cout << (int)targetCoords[i] << (i==targetCoords.size()-1 ? "" : ", ");
+    cout << "]" << RESET << endl;
+    
+    Node* curr = this;
+    cout << "  Path: " << BOLD << (int)curr->getId() << RESET;
+    
+    int hops = 0;
+    while (hops < 100) {
+        uint8_t currMCD = curr->calculateMCD(targetCoords);
+        if (currMCD == 0) {
+            cout << GREEN << " [REACHED!]" << RESET << endl;
+            return curr->getId();
+        }
+        
+        Node* nextHop = nullptr;
+        uint8_t bestMCD = currMCD;
+        
+        for (Node* neighbor : curr->s2Neighbors_) {
+            uint8_t neighborMCD = neighbor->calculateMCD(targetCoords);
+            if (neighborMCD < bestMCD) {
+                bestMCD = neighborMCD;
+                nextHop = neighbor;
+            }
+        }
+        
+        if (!nextHop) {
+            cout << RED << " [STUCK - LOCAL MINIMUM]" << RESET << endl;
+            return curr->getId();
+        }
+        
+        curr = nextHop;
+        cout << " -> " << BOLD << (int)curr->getId() << RESET;
+        hops++;
+    }
+    
+    cout << RED << " [FAILED - TOO MANY HOPS]" << RESET << endl;
+    return curr->getId();
+}
+
 void Node::printKeys() {
     cout << "-----------Node id:" << (int)id_ << "-----------" << endl;
     cout << "{";
