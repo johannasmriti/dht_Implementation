@@ -1,4 +1,4 @@
-# CSE 250A: Chord DHT Project
+# Chord DHT Implementation
 
 ## Overview
 
