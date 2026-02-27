@@ -58,8 +58,9 @@ public:
     void printKeys();
     void printFingerTable();
     
-    // Helper for finding successor logic
-    Node* find_successor(uint8_t id);
+    // DHT helper functions (Mimicking RPC)
+    uint8_t localLookup(uint8_t key);
+    Node* find_successor(uint8_t id, std::vector<uint8_t>* path = nullptr);
     Node* closest_preceding_node(uint8_t id);
     
     // Manage keys
