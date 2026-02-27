@@ -96,18 +96,18 @@ FingerTables:
 *******************************************
 
 3. Insert keys and add new node joins
-[35m[INSERT] Key 3 -> Stored at Node 30[0m
-[35m[INSERT] Key 200 -> Stored at Node 230[0m
-[35m[INSERT] Key 123 -> Stored at Node 160[0m
-[35m[INSERT] Key 45 -> Stored at Node 65[0m
-[35m[INSERT] Key 99 -> Stored at Node 110[0m
-[35m[INSERT] Key 60 -> Stored at Node 65[0m
-[35m[INSERT] Key 50 -> Stored at Node 65[0m
-[35m[INSERT] Key 100 -> Stored at Node 110[0m
-[35m[INSERT] Key 101 -> Stored at Node 110[0m
-[35m[INSERT] Key 102 -> Stored at Node 110[0m
-[35m[INSERT] Key 240 -> Stored at Node 0[0m
-[35m[INSERT] Key 250 -> Stored at Node 0[0m
+[INSERT] Key 3 -> Stored at Node 30
+[INSERT] Key 200 -> Stored at Node 230
+[INSERT] Key 123 -> Stored at Node 160
+[INSERT] Key 45 -> Stored at Node 65
+[INSERT] Key 99 -> Stored at Node 110
+[INSERT] Key 60 -> Stored at Node 65
+[INSERT] Key 50 -> Stored at Node 65
+[INSERT] Key 100 -> Stored at Node 110
+[INSERT] Key 101 -> Stored at Node 110
+[INSERT] Key 102 -> Stored at Node 110
+[INSERT] Key 240 -> Stored at Node 0
+[INSERT] Key 250 -> Stored at Node 0
 
 3.1 print keys that stored in each node
 -----------Node id:0-----------
@@ -170,19 +170,19 @@ Look-up result of key 250 from node 100 with path [100,0] value is 10
 
 5. Leave
 Let one node n2 leave, print the updated finger tables of n0 and n1, and keys distribution
-[31m[1m>>> Node 65 is leaving the network...[0m
-[33m  (Leave) Migrating 3 keys to successor Node 100...[0m
-[32m    Key 45 migrated.[0m
-[32m    Key 50 migrated.[0m
-[32m    Key 60 migrated.[0m
-[34m  (Leave) Ring patched: Node 30 -> Node 100[0m
-[35m  (Leave) Notifying other nodes to update their finger tables...[0m
-[36m    Updated finger table for Node 160[0m
-[36m    Updated finger table for Node 230[0m
-[36m    Updated finger table for Node 0[0m
-[36m    Updated finger table for Node 30[0m
-[36mUpdated finger table for predecessor Node 30:[0m
-[36mUpdated finger table for successor Node 100:[0m
+>>> Node 65 is leaving the network...
+  (Leave) Migrating 3 keys to successor Node 100...
+    Key 45 migrated.
+    Key 50 migrated.
+    Key 60 migrated.
+  (Leave) Ring patched: Node 30 -> Node 100
+  (Leave) Notifying other nodes to update their finger tables...
+    Updated finger table for Node 160
+    Updated finger table for Node 230
+    Updated finger table for Node 0
+    Updated finger table for Node 30
+Updated finger table for predecessor Node 30:
+Updated finger table for successor Node 100:
 ----------Node id:0----------
 Successor: 30 Predecessor: 230
 FingerTables:
@@ -236,7 +236,7 @@ Node Coordinates in 3 spaces:
   Node 225: [129, 191, 187]
 
 Performing Space Shuffle Lookups (Greediest Routing):
-[33m[S2 LOOKUP] Target: [129, 191, 187][0m
-  Path: [1m0[0m -> [1m225[0m[32m [REACHED!][0m
-[33m[S2 LOOKUP] Target: [100, 200, 50][0m
-  Path: [1m50[0m -> [1m0[0m[31m [STUCK - LOCAL MINIMUM][0m
+[S2 LOOKUP] Target: [129, 191, 187]
+  Path: 0 -> 225 [REACHED!]
+[S2 LOOKUP] Target: [100, 200, 50]
+  Path: 50 -> 0 [STUCK - LOCAL MINIMUM]

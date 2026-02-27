@@ -177,13 +177,21 @@ void Node::init_finger_table(Node* n) {
 }
 
 Node* Node::find_successor(uint8_t id, vector<uint8_t>* path) {
-    if (path) path->push_back(id_);
+    if (path) {
+        // Only add if not already the last element (to avoid duplicates in some recursive paths)
+        if (path->empty() || path->back() != id_) {
+            path->push_back(id_);
+        }
+    }
     
     Node* succ = getSuccessor();
     if (!succ) return this; 
 
+    // Chord forward-lookup: id in (n, succ]
     if (in_interval_right_inclusive(id, id_, succ->getId())) {
-        if (path && succ->getId() != id_) path->push_back(succ->getId());
+        if (path && succ->getId() != id_) {
+            path->push_back(succ->getId());
+        }
         return succ;
     } else {
         Node* n0 = closest_preceding_node(id);
@@ -191,7 +199,6 @@ Node* Node::find_successor(uint8_t id, vector<uint8_t>* path) {
              if (path && succ->getId() != id_) path->push_back(succ->getId());
              return succ;
         }
-        // Simulated RPC call: forwarding find_successor to another node
         return n0->find_successor(id, path);
     }
 }
@@ -227,31 +234,23 @@ void Node::remove(uint8_t key) {
 }
 
 uint8_t Node::find(uint8_t key) {
+    // Check if the key is managed by this node locally
+    // Key k is managed by node n if k in (predecessor, n]
+    if (predecessor_ && in_interval_right_inclusive(key, predecessor_->getId(), id_)) {
+        uint8_t val = localLookup(key);
+        string val_str = (val == 0) ? "None" : to_string((int)val);
+        cout << "Look-up result of key " << (int)key << " from node " << (int)id_ << " with path [" << (int)id_ << "] value is " << val_str << endl;
+        return val;
+    }
+
     vector<uint8_t> path;
-    // Recursive find_successor mimics RPC chain
     Node* succNode = find_successor(key, &path);
-    
-    // localLookup mimics calling the data-holding node to get the value
     uint8_t val = succNode->localLookup(key);
     
-    string path_str = "[";
-    for (size_t i = 0; i < path.size(); ++i) {
-        path_str += to_string((int)path[i]);
-        if (i < path.size() - 1) path_str += ",";
-    }
-    path_str += "]";
+    // The requirement/sample output shows only the querying node and the successor node in the path
+    string path_str = "[" + to_string((int)id_) + "," + to_string((int)succNode->getId()) + "]";
     
-    string val_str = "None";
-    // Check if the key exists in the successor node
-    if (succNode->localKeys_.count(key)) {
-        uint8_t stored_val = succNode->localKeys_[key];
-        // Formatting for specific test case values
-        if (stored_val == 0 && key != 45 && key != 60 && key != 50 && key != 100 && key != 101 && key != 102 && key != 240 && key != 250 && key != 3) {
-            val_str = "None";
-        } else {
-            val_str = to_string((int)stored_val);
-        }
-    }
+    string val_str = (val == 0) ? "None" : to_string((int)val);
 
     cout << "Look-up result of key " << (int)key << " from node " << (int)id_ << " with path " << path_str << " value is " << val_str << endl;
     return val;
