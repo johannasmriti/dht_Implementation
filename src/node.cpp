@@ -49,7 +49,16 @@ Node* FingerTable::get(size_t index) {
 }
 
 void FingerTable::prettyPrint() {
-    Node* owner = nullptr;
+    cout << "FingerTables:" << endl;
+    for (size_t i = 1; i <= BITLENGTH; ++i) {
+        uint8_t start = (nodeId_ + (1 << (i-1))) % (1 << BITLENGTH);
+        uint8_t end = (nodeId_ + (1 << i)) % (1 << BITLENGTH);
+        Node* fingerSucc = get(i);
+        
+        cout << "| k = " << i << " [ " << (int)start << " , " << (int)end << " ) "
+             << " succ. = " << (fingerSucc ? (int)fingerSucc->getId() : -1) << " |" << endl;
+    }
+    cout << "*******************************************" << endl;
 }
 
 void Node::printFingerTable() {
@@ -57,16 +66,7 @@ void Node::printFingerTable() {
     cout << "----------Node id:" << (int)id_ << "----------" << endl;
     cout << "Successor: " << (succ ? (int)succ->getId() : -1) 
          << " Predecessor: " << (predecessor_ ? (int)predecessor_->getId() : -1) << endl;
-    cout << "FingerTables:" << endl;
-    for (size_t i = 1; i <= BITLENGTH; ++i) {
-        uint8_t start = (id_ + (1 << (i-1))) % (1 << BITLENGTH);
-        uint8_t end = (id_ + (1 << i)) % (1 << BITLENGTH);
-        Node* fingerSucc = fingerTable_.get(i);
-        
-        cout << "| k = " << i << " [ " << (int)start << " , " << (int)end << " ) "
-             << " succ. = " << (fingerSucc ? (int)fingerSucc->getId() : -1) << " |" << endl;
-    }
-    cout << "*******************************************" << endl;
+    fingerTable_.prettyPrint();
 }
 
 
@@ -155,9 +155,7 @@ void Node::leave() {
             }
 
             cout << CYAN << "Updated finger table for predecessor Node " << (int)predecessor_->getId() << ":" << RESET << endl;
-            predecessor_->fingerTable_.prettyPrint();
             cout << CYAN << "Updated finger table for successor Node " << (int)succ->getId() << ":" << RESET << endl;
-            succ->fingerTable_.prettyPrint();
         }
     } else {
         cout << YELLOW << "Node " << (int)id_ << " was the last node in the ring." << RESET << endl;
